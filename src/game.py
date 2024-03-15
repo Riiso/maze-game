@@ -27,16 +27,24 @@ class Game:
                     self.running = False
 
     def update(self):
-         # Update game state based on keypresses
         keys = pygame.key.get_pressed()
+        dx, dy = 0, 0
         if keys[pygame.K_UP]:
-            self.player.move_up()
-        if keys[pygame.K_DOWN]:
-            self.player.move_down()
-        if keys[pygame.K_LEFT]:
-            self.player.move_left()
-        if keys[pygame.K_RIGHT]:
-            self.player.move_right()
+            dy = -1
+        elif keys[pygame.K_DOWN]:
+            dy = 1
+        elif keys[pygame.K_LEFT]:
+            dx = -1
+        elif keys[pygame.K_RIGHT]:
+            dx = 1
+
+        # Calculate the player's proposed position based on movement direction
+        proposed_x, proposed_y = self.player.propose_move(dx, dy)
+
+        # Adjust check to consider the whole player area
+        if not self.level.check_collision(proposed_x + self.level.offset_x, proposed_y + self.level.offset_y):
+            self.player.x = proposed_x
+            self.player.y = proposed_y
 
     def draw(self):
         self.screen.fill((0, 0, 0))  # Clear the screen
