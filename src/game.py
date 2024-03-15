@@ -2,6 +2,7 @@ import pygame
 import sys
 from player import Player
 from level import Level
+from menu import Menu
 
 class Game:
     def __init__(self):
@@ -14,7 +15,16 @@ class Game:
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         self.running = True
-        self.level = Level()  # Load Level 1
+
+        # Initialize and run the menu, and get the selected level
+        menu = Menu(self.screen)
+        selected_level = menu.run()
+        if selected_level is None:  # Quit if no selection or "Quit Game" is chosen
+            pygame.quit()
+            sys.exit()
+
+        # Load the selected level; for now, assume it's Level 1 for simplicity
+        self.level = Level(selected_level + 1)  # Add 1 because levels are 1-indexed
         px, py = self.level.player_start_pos
         self.player = Player(px, py)  # Initialize the player at the start position found in the level
 
