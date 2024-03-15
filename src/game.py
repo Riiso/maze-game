@@ -1,6 +1,7 @@
 import pygame
 import sys
-from player import Player  # Ensure you have a player.py file with the Player class defined
+from player import Player
+from level import Level
 
 class Game:
     def __init__(self):
@@ -13,20 +14,20 @@ class Game:
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         self.running = True
-        # Initialize the player with an adjusted starting position
-        self.player = Player(self.screen_width // 2, self.screen_height // 2)
-        self.player_speed = 5
+        self.level = Level()  # Load Level 1
+        px, py = self.level.player_start_pos
+        self.player = Player(px, py)  # Initialize the player at the start position found in the level
 
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:  # Press ESC to quit the game
+                if event.key == pygame.K_ESCAPE:  # Quit the game with ESC
                     self.running = False
 
     def update(self):
-        # Update game state based on keypresses
+         # Update game state based on keypresses
         keys = pygame.key.get_pressed()
         if keys[pygame.K_UP]:
             self.player.move_up()
@@ -38,17 +39,17 @@ class Game:
             self.player.move_right()
 
     def draw(self):
-        self.screen.fill((0, 0, 0))  # Clear the screen with black
-        # Draw the player (replace with player's draw method if available)
-        pygame.draw.rect(self.screen, (0, 128, 255), pygame.Rect(self.player.x, self.player.y, 50, 50))
-        pygame.display.flip()  # Update the screen
+        self.screen.fill((0, 0, 0))  # Clear the screen
+        self.level.draw(self.screen)  # Draw the level
+        self.player.draw(self.screen, self.level.offset_x, self.level.offset_y)  # Draw the player
+        pygame.display.flip()  # Update the display
 
     def run(self):
         while self.running:
             self.handle_events()
             self.update()
             self.draw()
-            self.clock.tick(60)  # Cap the game at 60 frames per second
+            self.clock.tick(60)  # Maintain 60 FPS
 
         pygame.quit()
         sys.exit()
