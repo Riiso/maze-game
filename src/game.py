@@ -23,7 +23,7 @@ class Game:
             pygame.quit()
             sys.exit()
 
-        # Load the selected level; for now, assume it's Level 1 for simplicity
+        # Load the selected level
         self.level = Level(selected_level + 1)  # Add 1 because levels are 1-indexed
         px, py = self.level.player_start_pos
         self.player = Player(px, py)  # Initialize the player at the start position found in the level
