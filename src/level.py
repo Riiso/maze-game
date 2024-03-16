@@ -1,7 +1,8 @@
 import pygame
 
 class Level:
-    def __init__(self, level_num=1):
+    def __init__(self, level_num):
+        self.level_num = level_num  # Store the current level number
         self.layouts = {
             1: [
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],

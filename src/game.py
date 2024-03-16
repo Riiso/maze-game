@@ -3,38 +3,75 @@ import sys
 from player import Player
 from level import Level
 from menu import Menu
+from pause_menu import PauseMenu
 
 class Game:
     def __init__(self):
         pygame.init()
+        self.setup_screen()
+        self.clock = pygame.time.Clock()
+        self.state = "MAIN_MENU"  # Initial state
+
+    def setup_screen(self):
         # Get the current screen resolution to set the game to full screen
         self.screen_info = pygame.display.Info()
         self.screen_width = self.screen_info.current_w
         self.screen_height = self.screen_info.current_h
         # Set the game to run in full screen
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
-        self.clock = pygame.time.Clock()
-        self.running = True
 
-        # Initialize and run the menu, and get the selected level
+    def show_main_menu(self):
         menu = Menu(self.screen)
         selected_level = menu.run()
-        if selected_level is None:  # Quit if no selection or "Quit Game" is chosen
-            pygame.quit()
-            sys.exit()
+        if selected_level is None:  # If "Quit Game" is selected or the window is closed
+            self.exit_game()
+        else:
+            self.start_level(selected_level + 1)  # Transition to starting the selected level
 
-        # Load the selected level
-        self.level = Level(selected_level + 1)  # Add 1 because levels are 1-indexed
+    def start_level(self, level_num):
+        self.level = Level(level_num)  # Assumes levels are 1-indexed
         px, py = self.level.player_start_pos
-        self.player = Player(px, py)  # Initialize the player at the start position found in the level
+        self.player = Player(px, py)
+        self.state = "RUNNING"
+
+    def pause_game(self):
+        pause_menu = PauseMenu(self.screen)
+        # Moved the pause menu interaction loop here
+        while self.state == "PAUSED":
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.exit_game()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_DOWN:
+                        pause_menu.selected = (pause_menu.selected + 1) % len(pause_menu.items)
+                    elif event.key == pygame.K_UP:
+                        pause_menu.selected = (pause_menu.selected - 1) % len(pause_menu.items)
+                    elif event.key == pygame.K_RETURN:
+                        selected_option = pause_menu.selected
+                        if selected_option == 0:  # Resume
+                            self.state = "RUNNING"
+                        elif selected_option == 1:  # Restart Level
+                            self.start_level(self.level.level_num)
+                            self.state = "RUNNING"  # Ensure the state is updated to resume game loop
+                        elif selected_option == 2:  # Main Menu
+                            self.state = "MAIN_MENU"
+                            self.show_main_menu()
+            pause_menu.draw()  # Continuously draw the pause menu while in the PAUSED state
+            pygame.display.flip()  # Ensure the screen updates are reflected
+
+    def exit_game(self):
+        pygame.quit()
+        sys.exit()
 
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.running = False
+                self.exit_game()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:  # Quit the game with ESC
-                    self.running = False
+                if event.key == pygame.K_p and self.state == "RUNNING":  # Pause game if 'P' is pressed
+                    print("Pausing Game")
+                    self.state = "PAUSED"
+
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -61,16 +98,18 @@ class Game:
         self.level.draw(self.screen)  # Draw the level
         self.player.draw(self.screen, self.level.offset_x, self.level.offset_y)  # Draw the player
         pygame.display.flip()  # Update the display
-
+    
     def run(self):
-        while self.running:
-            self.handle_events()
-            self.update()
-            self.draw()
-            self.clock.tick(60)  # Maintain 60 FPS
-
-        pygame.quit()
-        sys.exit()
+        while True:
+            if self.state == "MAIN_MENU":
+                self.show_main_menu()
+            elif self.state == "RUNNING":
+                self.handle_events()
+                self.update()
+                self.draw()
+                self.clock.tick(60)  # Maintain 60 FPS
+            elif self.state == "PAUSED":
+                self.pause_game()
 
 if __name__ == "__main__":
     game = Game()
