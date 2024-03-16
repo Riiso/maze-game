@@ -41,11 +41,11 @@ class Game:
         dx, dy = 0, 0
         if keys[pygame.K_UP]:
             dy = -1
-        elif keys[pygame.K_DOWN]:
+        if keys[pygame.K_DOWN]:
             dy = 1
-        elif keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT]:
             dx = -1
-        elif keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT]:
             dx = 1
 
         # Calculate the player's proposed position based on movement direction
