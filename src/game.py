@@ -93,6 +93,18 @@ class Game:
             self.player.x = proposed_x
             self.player.y = proposed_y
 
+        self.check_collectible_collision()
+        if self.level.exit_open and (self.player.x, self.player.y) == (self.level.exit_position[0] * self.level.block_size, self.level.exit_position[1] * self.level.block_size):
+            print("Exit")
+
+    def check_collectible_collision(self):
+        for collectible in self.level.collectibles:
+            if not collectible.collected and collectible.x == self.player.x and collectible.y == self.player.y:
+                collectible.collected = True
+                break
+        if all(collectible.collected for collectible in self.level.collectibles):
+            self.level.exit_open = True
+
     def draw(self):
         self.screen.fill((0, 0, 0))  # Clear the screen
         self.level.draw(self.screen)  # Draw the level
