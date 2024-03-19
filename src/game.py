@@ -120,8 +120,10 @@ class Game:
             self.state = "END_LEVEL"
 
     def check_collectible_collision(self):
+        player_rect = pygame.Rect(self.player.x, self.player.y, self.player.block_size, self.player.block_size)
         for collectible in self.level.collectibles:
-            if not collectible.collected and collectible.x == self.player.x and collectible.y == self.player.y:
+            collectible_rect = pygame.Rect(collectible.x, collectible.y, collectible.block_size, collectible.block_size)
+            if not collectible.collected and player_rect.colliderect(collectible_rect):
                 collectible.collected = True
                 break
         if all(collectible.collected for collectible in self.level.collectibles):
