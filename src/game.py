@@ -4,6 +4,7 @@ from player import Player
 from level import Level
 from menu import Menu
 from pause_menu import PauseMenu
+from end_level_panel import EndLevelPanel
 
 class Game:
     def __init__(self):
@@ -19,6 +20,28 @@ class Game:
         self.screen_height = self.screen_info.current_h
         # Set the game to run in full screen
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
+
+    def show_end_level_panel(self):
+        end_level_panel = EndLevelPanel(self.screen)
+        while self.state == "END_LEVEL":
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_DOWN:
+                        end_level_panel.selected = (end_level_panel.selected + 1) % len(end_level_panel.items)
+                    elif event.key == pygame.K_UP:
+                        end_level_panel.selected = (end_level_panel.selected - 1) % len(end_level_panel.items)
+                    elif event.key == pygame.K_RETURN:
+                        selected_option = end_level_panel.selected
+                        if selected_option == 0:  # Next Level
+                            print("Next Level functionality not implemented yet.")
+                        elif selected_option == 1:  # Main Menu
+                            self.state = "MAIN_MENU"
+                            self.show_main_menu()
+            end_level_panel.draw()
+            pygame.display.flip()
 
     def show_main_menu(self):
         menu = Menu(self.screen)
@@ -69,7 +92,6 @@ class Game:
                 self.exit_game()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p and self.state == "RUNNING":  # Pause game if 'P' is pressed
-                    print("Pausing Game")
                     self.state = "PAUSED"
 
 
@@ -95,7 +117,7 @@ class Game:
 
         self.check_collectible_collision()
         if self.level.exit_open and (self.player.x, self.player.y) == (self.level.exit_position[0] * self.level.block_size, self.level.exit_position[1] * self.level.block_size):
-            print("Exit")
+            self.state = "END_LEVEL"
 
     def check_collectible_collision(self):
         for collectible in self.level.collectibles:
@@ -122,6 +144,8 @@ class Game:
                 self.clock.tick(60)  # Maintain 60 FPS
             elif self.state == "PAUSED":
                 self.pause_game()
+            elif self.state == "END_LEVEL":
+                self.show_end_level_panel()
 
 if __name__ == "__main__":
     game = Game()
