@@ -2,8 +2,9 @@ import pygame
 from collectible import Collectible
 
 class Level:
-    def __init__(self, level_num):
+    def __init__(self, level_num, dev_mode):
         self.level_num = level_num  # Store the current level number
+        self.dev_mode = dev_mode  # Store the developer mode setting
         self.layouts = {
             1: [
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -64,18 +65,39 @@ class Level:
                 elif value == 4:
                     self.exit_position = (x, y)
 
-    def draw(self, screen):
+    def draw(self, screen, player_position, dev_mode):
+        view_radius = 200  # View radius in pixels
+
+        # Convert player position to screen coordinates and adjust for the center of the player sprite
+        player_screen_x = player_position[0] * self.block_size + self.offset_x + self.block_size // 2
+        player_screen_y = player_position[1] * self.block_size + self.offset_y + self.block_size // 2
+
         for y, row in enumerate(self.layout):
             for x, block in enumerate(row):
-                if block == 1:
-                    pygame.draw.rect(screen, (255, 255, 255), (x * self.block_size + self.offset_x, y * self.block_size + self.offset_y, self.block_size, self.block_size))
-                elif block == 4:
-                    if self.exit_open:
-                        pygame.draw.rect(screen, (0, 255, 0), (x * self.block_size + self.offset_x, y * self.block_size + self.offset_y, self.block_size, self.block_size))
-                    else:
-                        pygame.draw.rect(screen, (255, 0, 0), (x * self.block_size + self.offset_x, y * self.block_size + self.offset_y, self.block_size, self.block_size))
+                block_screen_x = x * self.block_size + self.offset_x
+                block_screen_y = y * self.block_size + self.offset_y
+
+                # Calculate distance from the center of the player to the center of the block
+                distance = ((block_screen_x + self.block_size // 2 - player_screen_x) ** 2 + (block_screen_y + self.block_size // 2 - player_screen_y) ** 2) ** 0.5
+
+                if dev_mode or distance <= view_radius:
+                    if block == 1:
+                        pygame.draw.rect(screen, (255, 255, 255), (block_screen_x, block_screen_y, self.block_size, self.block_size))
+                    elif block == 4:
+                        color = (0, 255, 0) if self.exit_open else (255, 0, 0)
+                        pygame.draw.rect(screen, color, (block_screen_x, block_screen_y, self.block_size, self.block_size))
+
         for collectible in self.collectibles:
-            collectible.draw(screen, self.offset_x, self.offset_y)
+            collectible_screen_x = collectible.x + self.offset_x
+            collectible_screen_y = collectible.y + self.offset_y
+
+            # Calculate distance from the player to the collectible
+            distance = ((collectible_screen_x + self.block_size // 2 - player_screen_x) ** 2 + (collectible_screen_y + self.block_size // 2 - player_screen_y) ** 2) ** 0.5
+
+            if dev_mode or distance <= view_radius:
+                collectible.draw(screen, self.offset_x, self.offset_y)
+
+
     
     def check_collision(self, proposed_x, proposed_y):
         # Calculate the grid coordinates for all corners of the player's proposed position
