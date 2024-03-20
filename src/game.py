@@ -12,6 +12,7 @@ class Game:
         self.setup_screen()
         self.clock = pygame.time.Clock()
         self.state = "MAIN_MENU"  # Initial state
+        self.dev_mode = False  # Set to True to enable developer mode for easier testing
 
     def setup_screen(self):
         # Get the current screen resolution to set the game to full screen
@@ -52,7 +53,7 @@ class Game:
             self.start_level(selected_level + 1)  # Transition to starting the selected level
 
     def start_level(self, level_num):
-        self.level = Level(level_num)  # Assumes levels are 1-indexed
+        self.level = Level(level_num, self.dev_mode)  # Assumes levels are 1-indexed
         px, py = self.level.player_start_pos
         self.player = Player(px, py)
         self.state = "RUNNING"
@@ -93,7 +94,8 @@ class Game:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p and self.state == "RUNNING":  # Pause game if 'P' is pressed
                     self.state = "PAUSED"
-
+                elif event.key == pygame.K_d:  # Toggle developer mode with 'D'
+                    self.dev_mode = not self.dev_mode
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -130,8 +132,9 @@ class Game:
             self.level.exit_open = True
 
     def draw(self):
+        player_position = (self.player.x / self.level.block_size, self.player.y / self.level.block_size)
         self.screen.fill((0, 0, 0))  # Clear the screen
-        self.level.draw(self.screen)  # Draw the level
+        self.level.draw(self.screen, player_position, self.dev_mode)  # Draw the level
         self.player.draw(self.screen, self.level.offset_x, self.level.offset_y)  # Draw the player
         pygame.display.flip()  # Update the display
     
