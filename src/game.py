@@ -162,6 +162,22 @@ class Game:
         player_position = (self.player.x / self.level.block_size, self.player.y / self.level.block_size)
         self.screen.fill((0, 0, 0))  # Clear the screen
         
+        font = pygame.font.SysFont("Arial", 24)
+        collected_count = len([c for c in self.level.collectibles if c.collected])
+        total_count = len(self.level.collectibles)
+        text_surface = font.render(f"Collectibles: {collected_count}/{total_count}", True, (255, 255, 255))
+        self.screen.blit(text_surface, (20, 20))
+
+        legend = [
+            "P - Pause game",
+            "A - Show hint (A*)",
+            "B - Show hint (Dijkstra)"
+        ]
+        y_offset = self.screen_height - (len(legend) * 30)  # Position the legend at the bottom of the screen
+        for i, line in enumerate(legend):
+            text_surface = font.render(line, True, (255, 255, 255))
+            self.screen.blit(text_surface, (20, y_offset + (i * 30)))
+        
         if self.show_hint and self.hint_path:
             # Get player's screen position
             player_screen_x = player_position[0] * self.level.block_size + self.level.offset_x
