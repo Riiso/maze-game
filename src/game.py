@@ -5,6 +5,7 @@ from level import Level
 from menu import Menu
 from pause_menu import PauseMenu
 from end_level_panel import EndLevelPanel
+from utils import astar_collectibles, dijkstra
 
 class Game:
     def __init__(self):
@@ -13,6 +14,10 @@ class Game:
         self.clock = pygame.time.Clock()
         self.state = "MAIN_MENU"  # Initial state
         self.dev_mode = False  # Set to True to enable developer mode for easier testing
+        self.hint_path = []
+        self.show_hint = False
+        self.hint_start_time = 0
+        self.hint_color = (0, 0, 0)
 
     def setup_screen(self):
         # Get the current screen resolution to set the game to full screen
@@ -96,6 +101,10 @@ class Game:
                     self.state = "PAUSED"
                 elif event.key == pygame.K_d:  # Toggle developer mode with 'D'
                     self.dev_mode = not self.dev_mode
+                elif event.key == pygame.K_a:   # A* pathfinding
+                    self.calculate_hint_path(method="astar")
+                elif event.key == pygame.K_b:   # Dijkstra pathfinding
+                    self.calculate_hint_path(method="dijkstra")
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -120,6 +129,24 @@ class Game:
         self.check_collectible_collision()
         if self.level.exit_open and (self.player.x, self.player.y) == (self.level.exit_position[0] * self.level.block_size, self.level.exit_position[1] * self.level.block_size):
             self.state = "END_LEVEL"
+        
+        if self.show_hint and (pygame.time.get_ticks() - self.hint_start_time > 3000):  # 3000 milliseconds = 3 seconds
+            self.show_hint = False
+    
+    def calculate_hint_path(self, method):
+        # Convert player's current position to grid coordinates
+        player_grid_pos = (self.player.y // self.level.block_size, self.player.x // self.level.block_size)
+        # Ensure positions are in the format (x, y) for the pathfinding algorithm
+        collectibles_grid_pos = [(collectible.y // self.level.block_size, collectible.x // self.level.block_size) for collectible in self.level.collectibles if not collectible.collected]
+        exit_position = (self.level.exit_position[1], self.level.exit_position[0])  # Assuming exit_position needs to be flipped
+        if method == "astar":
+            self.hint_path = astar_collectibles(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_position)
+            self.hint_color = (128, 0, 128)  # Purple for A*
+        elif method == "dijkstra":
+            self.hint_path = dijkstra(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_position)
+            self.hint_color = (0, 128, 128) # Teal for Dijkstra
+        self.show_hint = True
+        self.hint_start_time = pygame.time.get_ticks()
 
     def check_collectible_collision(self):
         player_rect = pygame.Rect(self.player.x, self.player.y, self.player.block_size, self.player.block_size)
@@ -134,6 +161,24 @@ class Game:
     def draw(self):
         player_position = (self.player.x / self.level.block_size, self.player.y / self.level.block_size)
         self.screen.fill((0, 0, 0))  # Clear the screen
+        
+        if self.show_hint and self.hint_path:
+            # Get player's screen position
+            player_screen_x = player_position[0] * self.level.block_size + self.level.offset_x
+            player_screen_y = player_position[1] * self.level.block_size + self.level.offset_y
+            view_radius = 200  # View radius in pixels
+
+            for row, column in self.hint_path:
+                hint_point_screen_x = column * self.level.block_size + self.level.offset_x
+                hint_point_screen_y = row * self.level.block_size + self.level.offset_y
+                
+                # Calculate distance from the player to this point of the hint path
+                distance = ((hint_point_screen_x - player_screen_x) ** 2 + (hint_point_screen_y - player_screen_y) ** 2) ** 0.5
+
+                # Draw the hint path point if within view radius or if in developer mode
+                if self.dev_mode or distance <= view_radius:
+                    pygame.draw.rect(self.screen, self.hint_color, (hint_point_screen_x, hint_point_screen_y, self.level.block_size, self.level.block_size))
+
         self.level.draw(self.screen, player_position, self.dev_mode)  # Draw the level
         self.player.draw(self.screen, self.level.offset_x, self.level.offset_y)  # Draw the player
         pygame.display.flip()  # Update the display
