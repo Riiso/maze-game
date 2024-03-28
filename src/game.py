@@ -6,6 +6,7 @@ from menu import Menu
 from pause_menu import PauseMenu
 from end_level_panel import EndLevelPanel
 from game_over_panel import GameOverPanel
+from end_game_panel import EndGamePanel
 from utils import astar_collectibles, dijkstra
 
 class Game:
@@ -67,6 +68,30 @@ class Game:
             self.exit_game()
         else:
             self.start_level(selected_level + 1)  # Transition to starting the selected level
+
+    def show_end_game_panel(self):
+        end_game_panel = EndGamePanel(self.screen)
+        while self.state == "END_GAME":  # Assuming "END_GAME" is the state for completing the last level
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_DOWN:
+                        end_game_panel.selected = (end_game_panel.selected + 1) % len(end_game_panel.items)
+                    elif event.key == pygame.K_UP:
+                        end_game_panel.selected = (end_game_panel.selected - 1) % len(end_game_panel.items)
+                    elif event.key == pygame.K_RETURN:
+                        selected_option = end_game_panel.selected
+                        if selected_option == 0:  # Restart Level
+                            self.start_level(self.level.level_num)  # Restart the last level
+                            self.state = "RUNNING"
+                        elif selected_option == 1:  # Main Menu
+                            self.state = "MAIN_MENU"
+                            self.show_main_menu()
+                        break  # Exit the loop after a selection is made
+            end_game_panel.draw()
+            pygame.display.flip()
 
     def start_level(self, level_num):
         self.level = Level(level_num, self.dev_mode)  # Assumes levels are 1-indexed
@@ -137,7 +162,7 @@ class Game:
             self.player.x = proposed_x
             self.player.y = proposed_y
 
-        self.check_enemy_collisions()
+        #self.check_enemy_collisions()
         self.check_collectible_collision()
         
         if self.show_hint and (pygame.time.get_ticks() - self.hint_start_time > 3000):  # 3000 milliseconds = 3 seconds
@@ -188,7 +213,10 @@ class Game:
             for exit_x, exit_y in self.level.exit_positions:
                 exit_rect = pygame.Rect(exit_x * self.level.block_size, exit_y * self.level.block_size, self.level.block_size, self.level.block_size)
                 if player_rect.colliderect(exit_rect):
-                    self.state = "END_LEVEL"
+                    if self.level.level_num == 4:  # Assuming level 4 is the last level
+                        self.state = "END_GAME"
+                    else:
+                        self.state = "END_LEVEL"
                     break
 
     def draw(self):
@@ -246,6 +274,8 @@ class Game:
                 self.pause_game()
             elif self.state == "END_LEVEL":
                 self.show_end_level_panel()
+            elif self.state == "END_GAME":
+                self.show_end_game_panel()
 
 if __name__ == "__main__":
     game = Game()
