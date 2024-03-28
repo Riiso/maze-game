@@ -139,8 +139,6 @@ class Game:
 
         self.check_enemy_collisions()
         self.check_collectible_collision()
-        if self.level.exit_open and (self.player.x, self.player.y) == (self.level.exit_position[0] * self.level.block_size, self.level.exit_position[1] * self.level.block_size):
-            self.state = "END_LEVEL"
         
         if self.show_hint and (pygame.time.get_ticks() - self.hint_start_time > 3000):  # 3000 milliseconds = 3 seconds
             self.show_hint = False
@@ -155,12 +153,15 @@ class Game:
         # Convert player's current position to grid coordinates
         player_grid_pos = (self.player.y // self.level.block_size, self.player.x // self.level.block_size)
         collectibles_grid_pos = [(collectible.y // self.level.block_size, collectible.x // self.level.block_size) for collectible in self.level.collectibles if not collectible.collected]
-        exit_position = (self.level.exit_position[1], self.level.exit_position[0])  # Assuming exit_position needs to be flipped
+        
+        middle_exit_pos = self.level.exit_positions[len(self.level.exit_positions) // 2]
+        exit_grid_pos = (middle_exit_pos[1], middle_exit_pos[0])
+        
         if method == "astar":
-            self.hint_path = astar_collectibles(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_position)
+            self.hint_path = astar_collectibles(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_grid_pos)
             self.hint_color = (128, 0, 128)  # Purple for A*
         elif method == "dijkstra":
-            self.hint_path = dijkstra(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_position)
+            self.hint_path = dijkstra(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_grid_pos)
             self.hint_color = (0, 128, 128) # Teal for Dijkstra
         self.show_hint = True
         self.hint_start_time = pygame.time.get_ticks()
@@ -182,6 +183,13 @@ class Game:
                 break
         if all(collectible.collected for collectible in self.level.collectibles):
             self.level.exit_open = True
+
+        if self.level.exit_open:
+            for exit_x, exit_y in self.level.exit_positions:
+                exit_rect = pygame.Rect(exit_x * self.level.block_size, exit_y * self.level.block_size, self.level.block_size, self.level.block_size)
+                if player_rect.colliderect(exit_rect):
+                    self.state = "END_LEVEL"
+                    break
 
     def draw(self):
         player_position = (self.player.x / self.level.block_size, self.player.y / self.level.block_size)
