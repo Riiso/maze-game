@@ -16,7 +16,6 @@ class EndLevelPanel:
             label = self.font.render(item, True, color)
             self.screen.blit(label, (self.screen.get_width() / 2 - label.get_width() / 2,
                                      self.screen.get_height() / 2 - 30 + index * 40))
-
         pygame.display.flip()
 
     def run(self):
