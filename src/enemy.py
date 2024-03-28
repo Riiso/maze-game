@@ -24,90 +24,43 @@ class Enemy:
             'hallway_defenders': (255, 0, 255),
         }
         self.color = self.color_map[enemy_type]
-        self.movement_pattern = self.calculate_movement_pattern()
         self.update_counter = 0  # Initialize update counter
         self.update_frequency = 10  # Move every 10th update call
+        self.last_known_player_pos = None   # Store the last known player position
+        self.layout_len_x = len(layout)
+        self.layout_len_y = len(layout[0])
+        self.movement_index = 0
+        self.movement_pattern = self.calculate_movement_pattern()
 
     def calculate_movement_pattern(self):
-        # Placeholder for calculating movement pattern
         # This method should be overridden in specific enemy subclasses
         return []
 
-    def update_behavior(self, player_pos, collected_ratio):
-        collected_ratio = self.collectibles_collected / self.total_collectibles
-
-        if collected_ratio >= 0.6:
-            self.speed = 0.8  # Speed up for stage 3
-            # Random direction change logic to be implemented
-        elif collected_ratio >= 0.6:
-            self.speed = 0.6  # Speed up for stage 2
-            # Chase player if within radius
-            if self.detect_player_in_radius(player_pos):
-                self.path = astar(self.layout, (self.y, self.x), (player_pos[1], player_pos[0]))
-        else:
-            self.speed = 0.5  # Default speed for stage 1
-
-    def detect_player_in_radius(self, player_pos):
-        # Calculate distance to player from original spawn position
-        dist_x = abs(self.original_x - player_pos[0])
-        dist_y = abs(self.original_y - player_pos[1])
-        distance = ((dist_x ** 2) + (dist_y ** 2)) ** 0.5
-        return distance <= self.chase_radius
-
-    def draw(self, screen, offset_x, offset_y, player_screen_x, player_screen_y, view_radius, dev_mode):
-        draw_x = self.x * self.block_size + offset_x
-        draw_y = self.y * self.block_size + offset_y
-
-        # Calculate distance from the enemy to the player
-        distance = ((draw_x + self.block_size // 2 - player_screen_x) ** 2 + (draw_y + self.block_size // 2 - player_screen_y) ** 2) ** 0.5
-
-        # Draw the enemy only if it's within the view radius or in dev mode
-        if dev_mode or distance <= view_radius:
-            pygame.draw.rect(screen, self.color, (draw_x, draw_y, self.block_size, self.block_size))
-
-class GateDefender(Enemy):
-    def __init__(self, x, y, layout, block_size, collectibles):
-        super().__init__(x, y, layout, block_size, collectibles, 'gate_defenders')
-        self.center_x = x
-        self.center_y = y
-        self.movement_index = 0
-        self.direction_change_chance = 0.1  # 10% chance to change direction in stage 3
-
-    def calculate_movement_pattern(self):
-        # Define the 7x7 square waypoints centered around the spawn position
-        pattern = [
-            (self.center_x, self.center_y),         # Center
-            (self.center_x + 2, self.center_y - 2), # Top-Right
-            (self.center_x, self.center_y),         # Center
-            (self.center_x - 2, self.center_y - 2), # Top-Left
-            (self.center_x, self.center_y),         # Center
-            (self.center_x - 2, self.center_y + 2), # Bottom-Left
-            (self.center_x, self.center_y),         # Center
-            (self.center_x + 2, self.center_y + 2), # Bottom-Right
-        ]
-        return pattern
+    def detect_player(self, player_pos):
+        # This method should be overridden in specific enemy subclasses
+        return
 
     def update_behavior(self, player_pos, collected_ratio, level_layout):
-        super().update_behavior(player_pos, collected_ratio)
         self.update_counter += 1
         if self.update_counter % self.update_frequency == 0:
             self.update_counter = 0  # Reset counter on move
 
             player_grid_pos = player_pos  # Assuming player_pos is already in grid coordinates
             enemy_grid_pos = (int(self.y), int(self.x))
+            
+            if collected_ratio >= 0.3 and self.detect_player(player_pos):
+                #self.speed = 0.6   
+                # If the player has moved or if no path exists, recalculate the path
+                if not self.path or (self.last_known_player_pos != player_grid_pos):
+                    self.last_known_player_pos = player_grid_pos
+                    self.path = astar(level_layout, enemy_grid_pos, (player_grid_pos[1], player_grid_pos[0]))
+                    #print('Chasing player:', self.path)
+            if collected_ratio >= 0.6 and self.detect_player(player_pos):
+                #self.speed = 0.8
+                pass
 
-            spawn_to_player_dx = abs(player_grid_pos[0] - int(self.original_x))
-            spawn_to_player_dy = abs(player_grid_pos[1] - int(self.original_y))
-
-            if spawn_to_player_dx <= 2 and spawn_to_player_dy <= 2:
-                if collected_ratio >= 0.3:
-                    # If the player has moved or if no path exists, recalculate the path
-                    if not self.path or (self.last_known_player_pos != player_grid_pos):
-                        self.last_known_player_pos = player_grid_pos
-                        self.path = astar(level_layout, enemy_grid_pos, (player_grid_pos[1], player_grid_pos[0]))
-                        print('Chasing player:', self.path)
-            else:
-                # Clear the path if the player is out of the designated chase area
+            # Clear the path if the player is out of the designated chase area
+            if not self.detect_player(player_pos) or collected_ratio < 0.3:
                 self.path = []
                 self.last_known_player_pos = None
 
@@ -132,12 +85,142 @@ class GateDefender(Enemy):
             next_step = self.path.pop(0)
             self.y, self.x = next_step[0], next_step[1]  # Adjust for A* returning (y, x)
 
-class CornerDefender(Enemy):
+    def draw(self, screen, offset_x, offset_y, player_screen_x, player_screen_y, view_radius, dev_mode):
+        draw_x = self.x * self.block_size + offset_x
+        draw_y = self.y * self.block_size + offset_y
+
+        # Calculate distance from the enemy to the player
+        distance = ((draw_x + self.block_size // 2 - player_screen_x) ** 2 + (draw_y + self.block_size // 2 - player_screen_y) ** 2) ** 0.5
+
+        # Draw the enemy only if it's within the view radius or in dev mode
+        if dev_mode or distance <= view_radius:
+            pygame.draw.rect(screen, self.color, (draw_x, draw_y, self.block_size, self.block_size))
+
+class GateDefender(Enemy):
+    def __init__(self, x, y, layout, block_size, collectibles):
+        super().__init__(x, y, layout, block_size, collectibles, 'gate_defenders')
+        self.center_x = x
+        self.center_y = y
+
     def calculate_movement_pattern(self):
-        # Placeholder for corner defenders' movement pattern
-        print("Corner defender movement pattern to be implemented.")
+        # Define the 5x5 square waypoints centered around the spawn position
+        pattern = [
+            (self.center_x, self.center_y),         # Center
+            (self.center_x + 2, self.center_y - 2), # Top-Right
+            (self.center_x, self.center_y),         # Center
+            (self.center_x - 2, self.center_y - 2), # Top-Left
+            (self.center_x, self.center_y),         # Center
+            (self.center_x - 2, self.center_y + 2), # Bottom-Left
+            (self.center_x, self.center_y),         # Center
+            (self.center_x + 2, self.center_y + 2), # Bottom-Right
+        ]
+        return pattern
+    
+    def detect_player(self, player_pos):
+        spawn_to_player_dx = abs(player_pos[0] - int(self.original_x))
+        spawn_to_player_dy = abs(player_pos[1] - int(self.original_y))
+
+        # Determine if the player is within the chase radius
+        within_chase_radius = spawn_to_player_dx <= 2 and spawn_to_player_dy <= 2
+    
+        return within_chase_radius
+
+class CornerDefender(Enemy):
+    def __init__(self, x, y, layout, block_size, collectibles):
+        super().__init__(x, y, layout, block_size, collectibles, 'corner_defenders')
+
+    def calculate_movement_pattern(self):
+        pattern = []    # Initialize pattern to an empty list to ensure it always has a value
+
+        if self.x == 1 and self.y == 1:
+            pattern = [
+            (self.x, self.y),         # Start
+            (self.x, self.y + 5),     # 1
+            (self.x + 5, self.y),     # 2
+            (self.x, self.y),         # Start
+            (self.x + 2, self.y + 2), # 3
+            (self.x, self.y + 4),     # 1
+            (self.x + 4, self.y),     # 2
+        ]
+        elif self.x == 1 and self.y == self.layout_len_x - 2:
+            pattern = [
+            (self.x, self.y),         # Start
+            (self.x, self.y - 5),     # 1
+            (self.x + 5, self.y),     # 2
+            (self.x, self.y),         # Start
+            (self.x + 2, self.y - 2), # 3
+            (self.x, self.y - 4),     # 1
+            (self.x + 4, self.y),     # 2
+        ]
+        elif self.x == self.layout_len_y - 2 and self.y == 1:
+            pattern = [
+            (self.x, self.y),         # Start
+            (self.x, self.y + 5),     # 1
+            (self.x - 5, self.y),     # 2
+            (self.x, self.y),         # Start
+            (self.x - 2, self.y + 2), # 3
+            (self.x, self.y + 4),     # 1
+            (self.x - 4, self.y),     # 2
+        ]
+        elif self.x == self.layout_len_y - 2 and self.y == self.layout_len_x - 2:
+            pattern = [
+            (self.x, self.y),         # Start
+            (self.x, self.y - 5),     # 1
+            (self.x - 5, self.y),     # 2
+            (self.x, self.y),         # Start
+            (self.x - 2, self.y - 2), # 3
+            (self.x, self.y - 4),     # 1
+            (self.x - 4, self.y),     # 2
+        ]
+            
+        return pattern
+    
+    def detect_player(self, player_pos):
+        spawn_to_player_dx = abs(player_pos[0] - int(self.original_x))
+        spawn_to_player_dy = abs(player_pos[1] - int(self.original_y))
+
+        # Determine if the player is within the chase radius
+        within_chase_radius = spawn_to_player_dx <= 4 and spawn_to_player_dy <= 4
+    
+        return within_chase_radius
 
 class HallwayDefender(Enemy):
+    def __init__(self, x, y, layout, block_size, collectibles):
+        super().__init__(x, y, layout, block_size, collectibles, 'hallway_defenders')
+    
     def calculate_movement_pattern(self):
-        # Placeholder for hallway defenders' movement pattern
-        print("Hallway defender movement pattern to be implemented.")
+        pattern = []    # Initialize pattern to an empty list to ensure it always has a value
+
+        if self.x == self.layout_len_y - 3:
+            pattern = [
+            (self.x, self.y),          # Start
+            (self.x - 1, self.y - 1),  # 1
+            (self.x - 17, self.y - 1), # 2
+            (self.x - 18, self.y),     # 3
+            (self.x - 17, self.y + 1), # 4
+            (self.x - 1, self.y + 1),  # 5
+        ]
+        else:
+            pattern = [
+            (self.x, self.y),          # Start
+            (self.x + 1, self.y + 1),  # 1
+            (self.x + 17, self.y + 1), # 2
+            (self.x + 18, self.y),     # 3
+            (self.x + 17, self.y - 1), # 4
+            (self.x + 1, self.y - 1),  # 5
+        ]
+        
+        return pattern
+
+    def detect_player(self, player_pos):
+        print("P", player_pos)
+        if self.original_x > 35:
+            print("rect", int(self.original_x) + 19, int(self.original_x) - 1, int(self.original_y) - 1, int(self.original_y) + 1)
+            if player_pos[0] >= int(self.original_x) - 19 and player_pos[0] <= int(self.original_x) + 1 and player_pos[1] >= int(self.original_y) - 1 and player_pos[1] <= int(self.original_y) + 1:
+                return True
+        else:
+            print("rect2", int(self.original_x) + 19, int(self.original_x) - 1, int(self.original_y) - 1, int(self.original_y) + 1)
+            if player_pos[0] <= int(self.original_x) + 19 and player_pos[0] >= int(self.original_x) -1 and player_pos[1] >= int(self.original_y) - 1 and player_pos[1] <= int(self.original_y) + 1:
+                return True
+        
+        return False
