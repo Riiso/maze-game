@@ -5,6 +5,8 @@ class Menu:
     def __init__(self, screen):
         self.screen = screen
         self.running = True
+        self.heading = "Maze Game"
+        self.heading_font = pygame.font.SysFont(None, 60)
         self.items = ["Level 1", "Level 2", "Level 3", "Level 4", "Quit Game"]
         self.font = pygame.font.Font(None, 36)
         self.selected = 0  # Index of the selected item
@@ -12,7 +14,7 @@ class Menu:
     def draw(self):
         self.screen.fill((0, 0, 0))  # Clear screen
         # Draw the heading
-        heading = self.font.render("Maze Game", True, (255, 255, 255))
+        heading = self.heading_font.render(self.heading, True, (255, 255, 255))
         self.screen.blit(heading, (self.screen.get_width() / 2 - heading.get_width() / 2, 50))
 
         # Draw the menu items

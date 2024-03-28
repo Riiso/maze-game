@@ -5,12 +5,18 @@ class EndLevelPanel:
     def __init__(self, screen):
         self.screen = screen
         self.running = True
+        self.title = "Level Completed"
+        self.title_font = pygame.font.SysFont(None, 48)
         self.items = ["Next Level", "Main Menu"]
         self.font = pygame.font.Font(None, 36)
         self.selected = 0  # Index of the selected item
 
     def draw(self):
         self.screen.fill((0, 0, 0))
+
+        title_label = self.title_font.render(self.title, True, (255, 255, 255))  # Render title
+        self.screen.blit(title_label, (self.screen.get_width() / 2 - title_label.get_width() / 2, self.screen.get_height() / 2 - 100))
+
         for index, item in enumerate(self.items):
             color = (255, 0, 0) if index == self.selected else (255, 255, 255)
             label = self.font.render(item, True, color)
