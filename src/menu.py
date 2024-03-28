@@ -5,7 +5,7 @@ class Menu:
     def __init__(self, screen):
         self.screen = screen
         self.running = True
-        self.items = ["Level 1", "Level 2", "Level 3", "Level 4", "Level 5", "Level 6", "Quit Game"]
+        self.items = ["Level 1", "Level 2", "Level 3", "Level 4", "Quit Game"]
         self.font = pygame.font.Font(None, 36)
         self.selected = 0  # Index of the selected item
 
