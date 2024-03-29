@@ -1,5 +1,7 @@
 import pygame
 import sys
+import threading
+import utils
 from player import Player
 from level import Level
 from menu import Menu
@@ -7,7 +9,6 @@ from pause_menu import PauseMenu
 from end_level_panel import EndLevelPanel
 from game_over_panel import GameOverPanel
 from end_game_panel import EndGamePanel
-from utils import astar_collectibles, dijkstra
 
 class Game:
     def __init__(self):
@@ -175,6 +176,10 @@ class Game:
             enemy.update_behavior(player_grid_pos, collected_ratio, self.level.layout)
     
     def calculate_hint_path(self, method):
+        # Reset the hint_path before starting the new calculation
+        self.hint_path = []
+        self.show_hint = False  # Also, temporarily disable showing the hint until the new path is calculated
+        
         # Convert player's current position to grid coordinates
         player_grid_pos = (self.player.y // self.level.block_size, self.player.x // self.level.block_size)
         collectibles_grid_pos = [(collectible.y // self.level.block_size, collectible.x // self.level.block_size) for collectible in self.level.collectibles if not collectible.collected]
@@ -182,14 +187,24 @@ class Game:
         middle_exit_pos = self.level.exit_positions[len(self.level.exit_positions) // 2]
         exit_grid_pos = (middle_exit_pos[1], middle_exit_pos[0])
         
+        def handle_path_result(path):
+            # This function will run in the pathfinding thread
+            # Use a thread-safe way to update the main game state
+            self.hint_path = path
+            if path:
+                self.show_hint = True
+            self.hint_start_time = pygame.time.get_ticks()
+
         if method == "astar":
-            self.hint_path = astar_collectibles(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_grid_pos)
+            # Start a new thread for A* pathfinding
+            thread = threading.Thread(target = utils.astar_threaded, args=(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_grid_pos, handle_path_result))
+            thread.start()
             self.hint_color = (128, 0, 128)  # Purple for A*
         elif method == "dijkstra":
-            self.hint_path = dijkstra(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_grid_pos)
+            # Start a new thread for Dijkstra pathfinding
+            thread = threading.Thread(target = utils.dijkstra_threaded, args=(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_grid_pos, handle_path_result))
+            thread.start()
             self.hint_color = (0, 128, 128) # Teal for Dijkstra
-        self.show_hint = True
-        self.hint_start_time = pygame.time.get_ticks()
 
     def check_enemy_collisions(self):
         player_rect = pygame.Rect(self.player.x, self.player.y, self.level.block_size, self.level.block_size)
