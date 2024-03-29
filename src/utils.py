@@ -1,5 +1,6 @@
 import heapq
 import time
+import threading
 
 class Node:
     """A node class for A* Pathfinding"""
@@ -23,7 +24,27 @@ class Node:
         # Hash based on the node's unique position
         return hash(self.position)
 
-def astar(maze, start, end):
+def astar_threaded(maze, start, collectibles, end, callback):
+    def run_astar():
+        # Run the original astar function
+        path = astar_collectibles(maze, start, collectibles, end)
+        # Call the callback with the result
+        callback(path)
+
+    # Start the astar function in a new thread
+    threading.Thread(target=run_astar).start()
+
+def dijkstra_threaded(maze, start, collectibles, end, callback):
+    def run_dijkstra():
+        # Run the original dijkstra function
+        path = dijkstra(maze, start, collectibles, end)
+        # Call the callback with the result
+        callback(path)
+
+    # Start the dijkstra function in a new thread
+    threading.Thread(target=run_dijkstra).start()
+
+def astar(maze, start, end, start_time):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
     # Create start and end node
@@ -59,6 +80,9 @@ def astar(maze, start, end):
         # Generate children
         children = []
         for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # Adjacent squares
+            if time.time() - start_time > 5:  # Limit search time to 1 second
+                print("A* time limit exceeded, returning part of path.")
+                return []  # Return None for the target position and an empty list for the path if time limit is exceeded    
 
             # Get node position
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
@@ -108,7 +132,7 @@ def astar_collectibles(maze, start, collectibles, end):
 
     while len(collectibles) > 0:
         # Find closest collectible
-        closest_collectible, closest_path = find_closest_collectible(maze, current_position, collectibles)
+        closest_collectible, closest_path = find_closest_collectible(maze, current_position, collectibles, start_time)
         if closest_path:
             # Exclude the starting point of each segment after the first to avoid duplicate positions
             path += closest_path if not path else closest_path[1:]
@@ -121,7 +145,7 @@ def astar_collectibles(maze, start, collectibles, end):
     # If current position is not the end, find path from current position to end
     if current_position != end:
         print("Finding path from current position to end:", current_position, end)
-        final_path = astar(maze, current_position, end)
+        final_path = astar(maze, current_position, end, start_time)
         if final_path:
             print("Found path from current position to end:", final_path)
             # Exclude the starting point of the final segment to avoid duplicate positions
@@ -133,14 +157,14 @@ def astar_collectibles(maze, start, collectibles, end):
     print(f"A* found path in {elapsed_time:.5f} seconds.")
     return path
 
-def find_closest_collectible(maze, start, collectibles):
+def find_closest_collectible(maze, start, collectibles, start_time):
     closest_collectible = None
     closest_path = []
     shortest_distance = float('inf')
 
     for collectible in collectibles:
         print("Trying to find path from", start, "to collectible at", collectible)
-        path = astar(maze, start, collectible)
+        path = astar(maze, start, collectible, start_time)
         if path:
             print("Found path to collectible", collectible, ":", path)
             if len(path) < shortest_distance:
