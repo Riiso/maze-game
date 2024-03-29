@@ -48,15 +48,19 @@ class Enemy:
             player_grid_pos = player_pos  # Assuming player_pos is already in grid coordinates
             enemy_grid_pos = (int(self.y), int(self.x))
             
-            if collected_ratio >= 0.3 and self.detect_player(player_pos):
-                #self.speed = 0.6   
-                # If the player has moved or if no path exists, recalculate the path
-                if not self.path or (self.last_known_player_pos != player_grid_pos):
-                    self.last_known_player_pos = player_grid_pos
-                    self.path = astar(level_layout, enemy_grid_pos, (player_grid_pos[1], player_grid_pos[0]))
-                    #print('Chasing player:', self.path)
+            # Detect player movement or path absence to trigger recalculation
+            player_moved = self.last_known_player_pos != player_grid_pos
+            path_needs_update = not self.path or player_moved
+
+            if collected_ratio >= 0.3 and self.detect_player(player_pos) and path_needs_update:
+                self.last_known_player_pos = player_grid_pos
+                self.path = astar(level_layout, enemy_grid_pos, (player_grid_pos[1], player_grid_pos[0]))
+                if self.path and player_moved:
+                    # If player is moving, immediately start following the new path
+                    self.follow_path()
+
             if collected_ratio >= 0.6 and self.detect_player(player_pos):
-                #self.speed = 0.8
+                # Additional behavior for higher collectible ratios can be added here
                 pass
 
             # Clear the path if the player is out of the designated chase area
