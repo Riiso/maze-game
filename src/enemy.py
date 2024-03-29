@@ -111,12 +111,14 @@ class GateDefender(Enemy):
         pattern = [
             (self.center_x, self.center_y),         # Center
             (self.center_x + 2, self.center_y - 2), # Top-Right
-            (self.center_x, self.center_y),         # Center
             (self.center_x - 2, self.center_y - 2), # Top-Left
-            (self.center_x, self.center_y),         # Center
+            (self.center_x + 2, self.center_y + 2), # Bottom-Right
             (self.center_x - 2, self.center_y + 2), # Bottom-Left
             (self.center_x, self.center_y),         # Center
             (self.center_x + 2, self.center_y + 2), # Bottom-Right
+            (self.center_x + 2, self.center_y - 2), # Top-Right
+            (self.center_x - 2, self.center_y + 2), # Bottom-Left
+            (self.center_x - 2, self.center_y - 2), # Top-Left
         ]
         return pattern
     
