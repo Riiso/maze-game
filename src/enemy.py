@@ -1,6 +1,8 @@
 import pygame
 import random
+import time
 from utils import astar
+
 
 class Enemy:
     def __init__(self, x, y, layout, block_size, collectibles, enemy_type):
@@ -54,14 +56,14 @@ class Enemy:
 
             if collected_ratio >= 0.3 and self.detect_player(player_pos) and path_needs_update:
                 self.last_known_player_pos = player_grid_pos
-                self.path = astar(level_layout, enemy_grid_pos, (player_grid_pos[1], player_grid_pos[0]))
+                self.path = astar(level_layout, enemy_grid_pos, (player_grid_pos[1], player_grid_pos[0]), time.time())
                 if self.path and player_moved:
                     # If player is moving, immediately start following the new path
                     self.follow_path()
 
-            if collected_ratio >= 0.6 and self.detect_player(player_pos):
-                # Additional behavior for higher collectible ratios can be added here
-                pass
+            if collected_ratio >= 0.6:
+                if random.random() < 0.1:   # 10% chance to change movement pattern
+                    self.movement_index = random.randint(0, len(self.movement_pattern) - 1)
 
             # Clear the path if the player is out of the designated chase area
             if not self.detect_player(player_pos) or collected_ratio < 0.3:
@@ -219,13 +221,10 @@ class HallwayDefender(Enemy):
         return pattern
 
     def detect_player(self, player_pos):
-        print("P", player_pos)
         if self.original_x > 35:
-            print("rect", int(self.original_x) + 19, int(self.original_x) - 1, int(self.original_y) - 1, int(self.original_y) + 1)
             if player_pos[0] >= int(self.original_x) - 19 and player_pos[0] <= int(self.original_x) + 1 and player_pos[1] >= int(self.original_y) - 1 and player_pos[1] <= int(self.original_y) + 1:
                 return True
         else:
-            print("rect2", int(self.original_x) + 19, int(self.original_x) - 1, int(self.original_y) - 1, int(self.original_y) + 1)
             if player_pos[0] <= int(self.original_x) + 19 and player_pos[0] >= int(self.original_x) -1 and player_pos[1] >= int(self.original_y) - 1 and player_pos[1] <= int(self.original_y) + 1:
                 return True
         
