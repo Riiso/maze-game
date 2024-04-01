@@ -15,14 +15,14 @@ class EndLevelPanel:
         self.screen.fill((0, 0, 0))
 
         title_label = self.title_font.render(self.title, True, (255, 255, 255))  # Render title
-        self.screen.blit(title_label, (self.screen.get_width() / 2 - title_label.get_width() / 2, self.screen.get_height() / 2 - 100))
+        self.screen.blit(title_label, (self.screen.get_width() / 2 - title_label.get_width() / 2, self.screen.get_height() / 2 - 100))  # Position title
 
-        for index, item in enumerate(self.items):
+        for index, item in enumerate(self.items):   # Draw menu items
             color = (255, 0, 0) if index == self.selected else (255, 255, 255)
             label = self.font.render(item, True, color)
             self.screen.blit(label, (self.screen.get_width() / 2 - label.get_width() / 2,
                                      self.screen.get_height() / 2 - 30 + index * 40))
-        pygame.display.flip()
+        pygame.display.flip()   # Update the display
 
     def run(self):
         while self.running:

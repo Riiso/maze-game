@@ -12,21 +12,17 @@ class Menu:
         self.selected = 0  # Index of the selected item
 
     def draw(self):
-        self.screen.fill((0, 0, 0))  # Clear screen
-        # Draw the heading
-        heading = self.heading_font.render(self.heading, True, (255, 255, 255))
-        self.screen.blit(heading, (self.screen.get_width() / 2 - heading.get_width() / 2, 50))
+        self.screen.fill((0, 0, 0))
 
-        # Draw the menu items
-        for index, item in enumerate(self.items):
-            if index == self.selected:
-                label = self.font.render(item, True, (255, 0, 0))  # Highlight selected item
-            else:
-                label = self.font.render(item, True, (255, 255, 255))
+        heading = self.heading_font.render(self.heading, True, (255, 255, 255)) # Render heading
+        self.screen.blit(heading, (self.screen.get_width() / 2 - heading.get_width() / 2, 50))  # Position heading
+
+        for index, item in enumerate(self.items):   # Draw menu items
+            color = (255, 0, 0) if index == self.selected else (255, 255, 255)
+            label = self.font.render(item, True, color)
             self.screen.blit(label, (self.screen.get_width() / 2 - label.get_width() / 2,
-                                     150 + index * 50))  # Adjust position based on item index
-
-        pygame.display.flip()
+                                     self.screen.get_height() / 2 - 30 + index * 40))
+        pygame.display.flip()   # Update the display
 
     def run(self):
         while self.running:
@@ -47,4 +43,4 @@ class Menu:
                             self.running = False
                             return self.selected  # Return the selected level index
             self.draw()
-        return None  # Return None if the loop ends without a selection
+        return None
