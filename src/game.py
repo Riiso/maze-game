@@ -264,21 +264,24 @@ class Game:
             self.screen.blit(text_surface, (20, y_offset + (i * 30)))
         
         if self.show_hint and self.hint_path:
+            path_rect_width = self.level.block_size // 4  # Make the path width 1/4th of the block size for a thinner rectangle
+            path_rect_height = self.level.block_size // 4
+            
             # Get player's screen position
             player_screen_x = player_position[0] * self.level.block_size + self.level.offset_x
             player_screen_y = player_position[1] * self.level.block_size + self.level.offset_y
             view_radius = 200  # View radius in pixels
 
             for row, column in self.hint_path:
-                hint_point_screen_x = column * self.level.block_size + self.level.offset_x
-                hint_point_screen_y = row * self.level.block_size + self.level.offset_y
+                hint_point_screen_x = column * self.level.block_size + self.level.offset_x + (self.level.block_size - path_rect_width) // 2 # Center the hint path point
+                hint_point_screen_y = row * self.level.block_size + self.level.offset_y + (self.level.block_size - path_rect_height) // 2
                 
                 # Calculate distance from the player to this point of the hint path
                 distance = ((hint_point_screen_x - player_screen_x) ** 2 + (hint_point_screen_y - player_screen_y) ** 2) ** 0.5
 
                 # Draw the hint path point if within view radius or if in developer mode
                 if self.dev_mode or distance <= view_radius:
-                    pygame.draw.rect(self.screen, self.hint_color, (hint_point_screen_x, hint_point_screen_y, self.level.block_size, self.level.block_size))
+                    pygame.draw.rect(self.screen, self.hint_color, (hint_point_screen_x, hint_point_screen_y, path_rect_width, path_rect_height))   # Draw the hint path point
 
         self.level.draw(self.screen, player_position, self.dev_mode)  # Draw the level
         self.player.draw(self.screen, self.level.offset_x, self.level.offset_y)  # Draw the player
