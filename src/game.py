@@ -13,8 +13,8 @@ from end_game_panel import EndGamePanel
 class Game:
     def __init__(self):
         pygame.init()
-        self.setup_screen()
-        self.clock = pygame.time.Clock()
+        self.setup_screen() # Set up the game screen
+        self.clock = pygame.time.Clock()    # Initialize the clock for controlling the frame rate
         self.state = "MAIN_MENU"  # Initial state
         self.dev_mode = False  # Set to True to enable developer mode for easier testing
         self.hint_path = []
@@ -23,44 +23,10 @@ class Game:
         self.hint_color = (0, 0, 0)
 
     def setup_screen(self):
-        # Get the current screen resolution to set the game to full screen
         self.screen_info = pygame.display.Info()
         self.screen_width = self.screen_info.current_w
         self.screen_height = self.screen_info.current_h
-        # Set the game to run in full screen
-        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
-
-    def show_game_over_panel(self):
-        game_over_panel = GameOverPanel(self.screen)
-        selected_option = game_over_panel.run()  # This will block until an option is selected
-        if selected_option == 0:  # Restart Level
-            self.start_level(self.level.level_num)
-        elif selected_option == 1:  # Main Menu
-            self.state = "MAIN_MENU"
-            self.show_main_menu()
-
-    def show_end_level_panel(self):
-        end_level_panel = EndLevelPanel(self.screen)
-        while self.state == "END_LEVEL":
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_DOWN:
-                        end_level_panel.selected = (end_level_panel.selected + 1) % len(end_level_panel.items)
-                    elif event.key == pygame.K_UP:
-                        end_level_panel.selected = (end_level_panel.selected - 1) % len(end_level_panel.items)
-                    elif event.key == pygame.K_RETURN:
-                        selected_option = end_level_panel.selected
-                        if selected_option == 0:  # Next Level
-                            self.start_level(self.level.level_num + 1)
-                            self.state = "RUNNING"
-                        elif selected_option == 1:  # Main Menu
-                            self.state = "MAIN_MENU"
-                            self.show_main_menu()
-            end_level_panel.draw()
-            pygame.display.flip()
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)   # Set the game to run in full screen
 
     def show_main_menu(self):
         menu = Menu(self.screen)
@@ -70,39 +36,18 @@ class Game:
         else:
             self.start_level(selected_level + 1)  # Transition to starting the selected level
 
-    def show_end_game_panel(self):
-        end_game_panel = EndGamePanel(self.screen)
-        while self.state == "END_GAME":  # Assuming "END_GAME" is the state for completing the last level
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_DOWN:
-                        end_game_panel.selected = (end_game_panel.selected + 1) % len(end_game_panel.items)
-                    elif event.key == pygame.K_UP:
-                        end_game_panel.selected = (end_game_panel.selected - 1) % len(end_game_panel.items)
-                    elif event.key == pygame.K_RETURN:
-                        selected_option = end_game_panel.selected
-                        if selected_option == 0:  # Restart Level
-                            self.start_level(self.level.level_num)  # Restart the last level
-                            self.state = "RUNNING"
-                        elif selected_option == 1:  # Main Menu
-                            self.state = "MAIN_MENU"
-                            self.show_main_menu()
-                        break  # Exit the loop after a selection is made
-            end_game_panel.draw()
-            pygame.display.flip()
-
-    def start_level(self, level_num):
-        self.level = Level(level_num, self.dev_mode)  # Assumes levels are 1-indexed
+    def start_level(self, level_num):   # Start the game at the specified level
+        self.level = Level(level_num, self.dev_mode)
         px, py = self.level.player_start_pos
         self.player = Player(px, py)
         self.state = "RUNNING"
 
+    def exit_game(self):
+        pygame.quit()
+        sys.exit()
+
     def pause_game(self):
         pause_menu = PauseMenu(self.screen)
-        # Moved the pause menu interaction loop here
         while self.state == "PAUSED":
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -118,16 +63,82 @@ class Game:
                             self.state = "RUNNING"
                         elif selected_option == 1:  # Restart Level
                             self.start_level(self.level.level_num)
-                            self.state = "RUNNING"  # Ensure the state is updated to resume game loop
+                            self.state = "RUNNING"
                         elif selected_option == 2:  # Main Menu
                             self.state = "MAIN_MENU"
                             self.show_main_menu()
-            pause_menu.draw()  # Continuously draw the pause menu while in the PAUSED state
-            pygame.display.flip()  # Ensure the screen updates are reflected
+                        break
+            pause_menu.draw()
+            pygame.display.flip()   # Update the display
 
-    def exit_game(self):
-        pygame.quit()
-        sys.exit()
+    def show_game_over_panel(self):
+        game_over_panel = GameOverPanel(self.screen)
+        while self.state == "GAME_OVER":
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.exit_game()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_DOWN:
+                        game_over_panel.selected = (game_over_panel.selected + 1) % len(game_over_panel.items)
+                    elif event.key == pygame.K_UP:
+                        game_over_panel.selected = (game_over_panel.selected - 1) % len(game_over_panel.items)
+                    elif event.key == pygame.K_RETURN:
+                        selected_option = game_over_panel.selected
+                        if selected_option == 0:  # Restart Level
+                            self.start_level(self.level.level_num)
+                            self.state = "RUNNING"
+                        elif selected_option == 1:  # Main Menu
+                            self.state = "MAIN_MENU"
+                            self.show_main_menu()
+                        break
+            game_over_panel.draw()
+            pygame.display.flip()   # Update the display
+
+    def show_end_level_panel(self):
+        end_level_panel = EndLevelPanel(self.screen)
+        while self.state == "END_LEVEL":
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.exit_game()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_DOWN:
+                        end_level_panel.selected = (end_level_panel.selected + 1) % len(end_level_panel.items)
+                    elif event.key == pygame.K_UP:
+                        end_level_panel.selected = (end_level_panel.selected - 1) % len(end_level_panel.items)
+                    elif event.key == pygame.K_RETURN:
+                        selected_option = end_level_panel.selected
+                        if selected_option == 0:  # Next Level
+                            self.start_level(self.level.level_num + 1)
+                            self.state = "RUNNING"
+                        elif selected_option == 1:  # Main Menu
+                            self.state = "MAIN_MENU"
+                            self.show_main_menu()
+                        break
+            end_level_panel.draw()
+            pygame.display.flip()   # Update the display
+
+    def show_end_game_panel(self):
+        end_game_panel = EndGamePanel(self.screen)
+        while self.state == "END_GAME":
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.exit_game()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_DOWN:
+                        end_game_panel.selected = (end_game_panel.selected + 1) % len(end_game_panel.items)
+                    elif event.key == pygame.K_UP:
+                        end_game_panel.selected = (end_game_panel.selected - 1) % len(end_game_panel.items)
+                    elif event.key == pygame.K_RETURN:
+                        selected_option = end_game_panel.selected
+                        if selected_option == 0:  # Restart Level
+                            self.start_level(self.level.level_num)
+                            self.state = "RUNNING"
+                        elif selected_option == 1:  # Main Menu
+                            self.state = "MAIN_MENU"
+                            self.show_main_menu()
+                        break
+            end_game_panel.draw()
+            pygame.display.flip()   # Update the display
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -163,10 +174,10 @@ class Game:
             self.player.x = proposed_x
             self.player.y = proposed_y
 
-        #self.check_enemy_collisions()
-        self.check_collectible_collision()
+        self.check_enemy_collisions()   # Check for enemy collisions
+        self.check_collectible_collision()  # Check for collectible collisions
         
-        if self.show_hint and (pygame.time.get_ticks() - self.hint_start_time > 3000):  # 3000 milliseconds = 3 seconds
+        if self.show_hint and (pygame.time.get_ticks() - self.hint_start_time > 3000):  # Show hint for 3 seconds
             self.show_hint = False
 
         # Update enemies
@@ -178,18 +189,16 @@ class Game:
     def calculate_hint_path(self, method):
         # Reset the hint_path before starting the new calculation
         self.hint_path = []
-        self.show_hint = False  # Also, temporarily disable showing the hint until the new path is calculated
+        self.show_hint = False  # Temporarily disable showing the hint until the new path is calculated
         
-        # Convert player's current position to grid coordinates
+        # Convert player's and collectibles current positions to grid coordinates
         player_grid_pos = (self.player.y // self.level.block_size, self.player.x // self.level.block_size)
         collectibles_grid_pos = [(collectible.y // self.level.block_size, collectible.x // self.level.block_size) for collectible in self.level.collectibles if not collectible.collected]
         
         middle_exit_pos = self.level.exit_positions[len(self.level.exit_positions) // 2]
         exit_grid_pos = (middle_exit_pos[1], middle_exit_pos[0])
         
-        def handle_path_result(path):
-            # This function will run in the pathfinding thread
-            # Use a thread-safe way to update the main game state
+        def handle_path_result(path):   # Callback function to handle the path result
             self.hint_path = path
             if path:
                 self.show_hint = True
@@ -199,44 +208,44 @@ class Game:
             # Start a new thread for A* pathfinding
             thread = threading.Thread(target = utils.astar_threaded, args=(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_grid_pos, handle_path_result))
             thread.start()
-            self.hint_color = (128, 0, 128)  # Purple for A*
+            self.hint_color = (128, 0, 128)
         elif method == "dijkstra":
             # Start a new thread for Dijkstra pathfinding
             thread = threading.Thread(target = utils.dijkstra_threaded, args=(self.level.layout, player_grid_pos, collectibles_grid_pos, exit_grid_pos, handle_path_result))
             thread.start()
-            self.hint_color = (0, 128, 128) # Teal for Dijkstra
+            self.hint_color = (0, 128, 128)
 
-    def check_enemy_collisions(self):
+    def check_enemy_collisions(self):   # Check for collisions between the player and enemies
         player_rect = pygame.Rect(self.player.x, self.player.y, self.level.block_size, self.level.block_size)
         for enemy in self.level.enemies:
             enemy_rect = pygame.Rect(enemy.x * self.level.block_size, enemy.y * self.level.block_size, self.level.block_size, self.level.block_size)
             if player_rect.colliderect(enemy_rect):
-                self.show_game_over_panel()
+                self.state = "GAME_OVER"
                 break
 
-    def check_collectible_collision(self):
+    def check_collectible_collision(self):  # Check for collisions between the player and collectibles
         player_rect = pygame.Rect(self.player.x, self.player.y, self.player.block_size, self.player.block_size)
         for collectible in self.level.collectibles:
             collectible_rect = pygame.Rect(collectible.x, collectible.y, collectible.block_size, collectible.block_size)
             if not collectible.collected and player_rect.colliderect(collectible_rect):
                 collectible.collected = True
                 break
-        if all(collectible.collected for collectible in self.level.collectibles):
+        if all(collectible.collected for collectible in self.level.collectibles):   # Open the exit if all collectibles are collected
             self.level.exit_open = True
 
         if self.level.exit_open:
             for exit_x, exit_y in self.level.exit_positions:
                 exit_rect = pygame.Rect(exit_x * self.level.block_size, exit_y * self.level.block_size, self.level.block_size, self.level.block_size)
                 if player_rect.colliderect(exit_rect):
-                    if self.level.level_num == 4:  # Assuming level 4 is the last level
+                    if self.level.level_num == 4:   # Check if this is the last level
                         self.state = "END_GAME"
                     else:
                         self.state = "END_LEVEL"
                     break
 
-    def draw(self):
+    def draw(self): # Draw the game elements on the screen
         player_position = (self.player.x / self.level.block_size, self.player.y / self.level.block_size)
-        self.screen.fill((0, 0, 0))  # Clear the screen
+        self.screen.fill((0, 0, 0))
         
         font = pygame.font.SysFont("Arial", 24)
         collected_count = len([c for c in self.level.collectibles if c.collected])
@@ -287,6 +296,8 @@ class Game:
                 self.clock.tick(60)  # Maintain 60 FPS
             elif self.state == "PAUSED":
                 self.pause_game()
+            elif self.state == "GAME_OVER":
+                self.show_game_over_panel()
             elif self.state == "END_LEVEL":
                 self.show_end_level_panel()
             elif self.state == "END_GAME":

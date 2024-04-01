@@ -139,7 +139,7 @@ class Level:
         self.enemies = []
         self.initialize_enemies()
 
-    def initialize_enemies(self):
+    def initialize_enemies(self):   # Initialize enemies based on the layout
         for y, row in enumerate(self.layout):
             for x, block_type in enumerate(row):
                 if block_type == 5:
@@ -149,21 +149,20 @@ class Level:
                 elif block_type == 7:
                     self.enemies.append(HallwayDefender(x, y, self.layout, self.block_size, self.collectibles))
 
-    # Calculate total maze size and offsets once for reuse
-    def calculate_offsets(self):
+    def calculate_offsets(self):    # Calculate total maze size and offsets once for reuse
         maze_width = len(self.layout[0]) * self.block_size
         maze_height = len(self.layout) * self.block_size
         self.offset_x = (pygame.display.Info().current_w - maze_width) // 2
         self.offset_y = (pygame.display.Info().current_h - maze_height) // 2
     
-    def find_player_start(self):
+    def find_player_start(self):    # Find the player start position in the layout
         for y, row in enumerate(self.layout):
             for x, block in enumerate(row):
-                if block == 2:  # Player start position marked by '2'
+                if block == 2:
                     return (x, y)
         return None
 
-    def initialize_level(self):
+    def initialize_level(self): # Initialize collectibles and exit positions
         for y, row in enumerate(self.layout):
             for x, value in enumerate(row):
                 if value == 3:
@@ -206,8 +205,7 @@ class Level:
         for enemy in self.enemies:
             enemy.draw(screen, self.offset_x, self.offset_y, player_screen_x, player_screen_y, view_radius, dev_mode)
     
-    def check_collision(self, proposed_x, proposed_y):
-        # Calculate the grid coordinates for all corners of the player's proposed position
+    def check_collision(self, proposed_x, proposed_y):    # Calculate the grid coordinates for all corners of the player's proposed position
         grid_coords = [
             ((proposed_x - self.offset_x) // self.block_size, (proposed_y - self.offset_y) // self.block_size),  # Top-left
             ((proposed_x + self.block_size - 1 - self.offset_x) // self.block_size, (proposed_y - self.offset_y) // self.block_size),  # Top-right

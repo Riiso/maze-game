@@ -10,7 +10,7 @@ class Enemy:
         self.original_y = y
         self.x = x
         self.y = y
-        self.center_x = x  # Set the center position to the initial position
+        self.center_x = x
         self.center_y = y
         self.layout = layout
         self.block_size = block_size
@@ -47,7 +47,7 @@ class Enemy:
         if self.update_counter % self.update_frequency == 0:
             self.update_counter = 0  # Reset counter on move
 
-            player_grid_pos = player_pos  # Assuming player_pos is already in grid coordinates
+            player_grid_pos = player_pos
             enemy_grid_pos = (int(self.y), int(self.x))
             
             # Detect player movement or path absence to trigger recalculation
@@ -65,12 +65,11 @@ class Enemy:
                 if random.random() < 0.1:   # 10% chance to change movement pattern
                     self.movement_index = random.randint(0, len(self.movement_pattern) - 1)
 
-            # Clear the path if the player is out of the designated chase area
-            if not self.detect_player(player_pos) or collected_ratio < 0.3:
+            if not self.detect_player(player_pos) or collected_ratio < 0.3: # Clear the path if the player is out of the designated chase area
                 self.path = []
                 self.last_known_player_pos = None
 
-            if not self.path:
+            if not self.path:   # If no path, follow the movement pattern
                 next_pos = self.movement_pattern[self.movement_index]
                 self.move_towards(next_pos)
                 if (self.x, self.y) == next_pos:
@@ -78,15 +77,13 @@ class Enemy:
             else:
                 self.follow_path()
 
-    def move_towards(self, target):
-        # Simple movement towards a target (one block per update)
+    def move_towards(self, target): # Simple movement towards a target (one block per update)
         if self.x < target[0]: self.x += self.speed
         elif self.x > target[0]: self.x -= self.speed
         if self.y < target[1]: self.y += self.speed
         elif self.y > target[1]: self.y -= self.speed
 
-    def follow_path(self):
-        # Follow the calculated A* path
+    def follow_path(self):  # Follow the calculated A* path
         if self.path:
             next_step = self.path.pop(0)
             self.y, self.x = next_step[0], next_step[1]  # Adjust for A* returning (y, x)
@@ -108,8 +105,7 @@ class GateDefender(Enemy):
         self.center_x = x
         self.center_y = y
 
-    def calculate_movement_pattern(self):
-        # Define the 5x5 square waypoints centered around the spawn position
+    def calculate_movement_pattern(self):   # Movement pattern for the gate defenders
         pattern = [
             (self.center_x, self.center_y),         # Center
             (self.center_x + 2, self.center_y - 2), # Top-Right
@@ -137,8 +133,7 @@ class CornerDefender(Enemy):
     def __init__(self, x, y, layout, block_size, collectibles):
         super().__init__(x, y, layout, block_size, collectibles, 'corner_defenders')
 
-    def calculate_movement_pattern(self):
-        pattern = []    # Initialize pattern to an empty list to ensure it always has a value
+    def calculate_movement_pattern(self):   # Movement pattern for the corner defenders
 
         if self.x == 1 and self.y == 1:
             pattern = [
@@ -196,8 +191,7 @@ class HallwayDefender(Enemy):
     def __init__(self, x, y, layout, block_size, collectibles):
         super().__init__(x, y, layout, block_size, collectibles, 'hallway_defenders')
     
-    def calculate_movement_pattern(self):
-        pattern = []    # Initialize pattern to an empty list to ensure it always has a value
+    def calculate_movement_pattern(self):   # Movement pattern for the hallway defenders
 
         if self.x == self.layout_len_y - 3:
             pattern = [

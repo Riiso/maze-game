@@ -15,7 +15,7 @@ class Menu:
         self.screen.fill((0, 0, 0))
 
         heading = self.heading_font.render(self.heading, True, (255, 255, 255)) # Render heading
-        self.screen.blit(heading, (self.screen.get_width() / 2 - heading.get_width() / 2, 50))  # Position heading
+        self.screen.blit(heading, (self.screen.get_width() / 2 - heading.get_width() / 2, 250))  # Position heading
 
         for index, item in enumerate(self.items):   # Draw menu items
             color = (255, 0, 0) if index == self.selected else (255, 255, 255)
