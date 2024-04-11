@@ -21,8 +21,8 @@ class Enemy:
         self.path = []
         self.chase_radius = 100
         self.color_map = {
-            'gate_defenders': (255, 0, 0),
-            'corner_defenders': (0, 255, 0),
+            'gate_defenders': (128, 0, 0),
+            'corner_defenders': (0, 255, 255),
             'hallway_defenders': (255, 0, 255),
         }
         self.color = self.color_map[enemy_type]
@@ -33,6 +33,7 @@ class Enemy:
         self.layout_len_y = len(layout[0])
         self.movement_index = 0
         self.movement_pattern = self.calculate_movement_pattern()
+        self.extreme_chase_mode = False
 
     def calculate_movement_pattern(self):
         # This method should be overridden in specific enemy subclasses
@@ -42,7 +43,7 @@ class Enemy:
         # This method should be overridden in specific enemy subclasses
         return
 
-    def update_behavior(self, player_pos, collected_ratio, level_layout):
+    def update_behavior(self, player_pos, collected_ratio, level_layout, level_num):
         self.update_counter += 1
         if self.update_counter % self.update_frequency == 0:
             self.update_counter = 0  # Reset counter on move
@@ -53,29 +54,46 @@ class Enemy:
             # Detect player movement or path absence to trigger recalculation
             player_moved = self.last_known_player_pos != player_grid_pos
             path_needs_update = not self.path or player_moved
+            
+            if level_num != 5:
+                if collected_ratio >= 0.3 and self.detect_player(player_pos) and path_needs_update:
+                    self.last_known_player_pos = player_grid_pos
+                    self.path = astar(level_layout, enemy_grid_pos, (player_grid_pos[1], player_grid_pos[0]), time.time())
+                    if self.path and player_moved:
+                        # If player is moving, immediately start following the new path
+                        self.follow_path()
+                if collected_ratio >= 0.6:
+                    if random.random() < 0.1:   # 10% chance to change movement pattern
+                        self.movement_index = random.randint(0, len(self.movement_pattern) - 1)
 
-            if collected_ratio >= 0.3 and self.detect_player(player_pos) and path_needs_update:
-                self.last_known_player_pos = player_grid_pos
-                self.path = astar(level_layout, enemy_grid_pos, (player_grid_pos[1], player_grid_pos[0]), time.time())
-                if self.path and player_moved:
-                    # If player is moving, immediately start following the new path
+                if not self.detect_player(player_pos) or collected_ratio < 0.3: # Clear the path if the player is out of the designated chase area
+                    self.path = []
+                    self.last_known_player_pos = None
+
+                if not self.path:   # If no path, follow the movement pattern
+                    next_pos = self.movement_pattern[self.movement_index]
+                    self.move_towards(next_pos)
+                    if (self.x, self.y) == next_pos:
+                        self.movement_index = (self.movement_index + 1) % len(self.movement_pattern)
+                else:
                     self.follow_path()
-
-            if collected_ratio >= 0.6:
-                if random.random() < 0.1:   # 10% chance to change movement pattern
-                    self.movement_index = random.randint(0, len(self.movement_pattern) - 1)
-
-            if not self.detect_player(player_pos) or collected_ratio < 0.3: # Clear the path if the player is out of the designated chase area
-                self.path = []
-                self.last_known_player_pos = None
-
-            if not self.path:   # If no path, follow the movement pattern
-                next_pos = self.movement_pattern[self.movement_index]
-                self.move_towards(next_pos)
-                if (self.x, self.y) == next_pos:
-                    self.movement_index = (self.movement_index + 1) % len(self.movement_pattern)
             else:
-                self.follow_path()
+                if not self.extreme_chase_mode and collected_ratio >= 0.3:
+                    self.extreme_chase_mode = self.detect_player(player_pos)
+                if collected_ratio >= 0.3 and self.extreme_chase_mode and path_needs_update:
+                    self.last_known_player_pos = player_grid_pos
+                    self.path = astar(level_layout, enemy_grid_pos, (player_grid_pos[1], player_grid_pos[0]), time.time())
+                    if self.path and player_moved:
+                        # If player is moving, immediately start following the new path
+                        self.follow_path()
+                
+                if not self.path:   # If no path, follow the movement pattern
+                    next_pos = self.movement_pattern[self.movement_index]
+                    self.move_towards(next_pos)
+                    if (self.x, self.y) == next_pos:
+                        self.movement_index = (self.movement_index + 1) % len(self.movement_pattern)
+                else:
+                    self.follow_path()
 
     def move_towards(self, target): # Simple movement towards a target (one block per update)
         if self.x < target[0]: self.x += self.speed
