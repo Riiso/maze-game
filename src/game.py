@@ -41,6 +41,8 @@ class Game:
         px, py = self.level.player_start_pos
         self.player = Player(px, py)
         self.state = "RUNNING"
+        if level_num == 5:
+            self.dev_mode = True
 
     def exit_game(self):
         pygame.quit()
@@ -117,8 +119,8 @@ class Game:
             end_level_panel.draw()
             pygame.display.flip()   # Update the display
 
-    def show_end_game_panel(self):
-        end_game_panel = EndGamePanel(self.screen)
+    def show_end_game_panel(self, flag):
+        end_game_panel = EndGamePanel(self.screen, flag)
         while self.state == "END_GAME":
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -174,7 +176,7 @@ class Game:
             self.player.x = proposed_x
             self.player.y = proposed_y
 
-        self.check_enemy_collisions()   # Check for enemy collisions
+        #self.check_enemy_collisions()   # Check for enemy collisions
         self.check_collectible_collision()  # Check for collectible collisions
         
         if self.show_hint and (pygame.time.get_ticks() - self.hint_start_time > 3000):  # Show hint for 3 seconds
@@ -184,7 +186,7 @@ class Game:
         player_grid_pos = (self.player.x // self.level.block_size, self.player.y // self.level.block_size)
         collected_ratio = len([c for c in self.level.collectibles if c.collected]) / len(self.level.collectibles)
         for enemy in self.level.enemies:
-            enemy.update_behavior(player_grid_pos, collected_ratio, self.level.layout)
+            enemy.update_behavior(player_grid_pos, collected_ratio, self.level.layout, self.level.level_num)
     
     def calculate_hint_path(self, method):
         # Reset the hint_path before starting the new calculation
@@ -237,7 +239,7 @@ class Game:
             for exit_x, exit_y in self.level.exit_positions:
                 exit_rect = pygame.Rect(exit_x * self.level.block_size, exit_y * self.level.block_size, self.level.block_size, self.level.block_size)
                 if player_rect.colliderect(exit_rect):
-                    if self.level.level_num == 4:   # Check if this is the last level
+                    if self.level.level_num == 4 or self.level.level_num == 5:   # Check if this is the last level or EXTREME CHALLENGE
                         self.state = "END_GAME"
                     else:
                         self.state = "END_LEVEL"
@@ -304,7 +306,10 @@ class Game:
             elif self.state == "END_LEVEL":
                 self.show_end_level_panel()
             elif self.state == "END_GAME":
-                self.show_end_game_panel()
+                if self.level.level_num == 4:
+                    self.show_end_game_panel(0)
+                else:
+                    self.show_end_game_panel(1)
 
 if __name__ == "__main__":
     game = Game()
