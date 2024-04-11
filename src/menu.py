@@ -7,7 +7,7 @@ class Menu:
         self.running = True
         self.heading = "Maze Game"
         self.heading_font = pygame.font.SysFont(None, 60)
-        self.items = ["Level 1", "Level 2", "Level 3", "Level 4", "Quit Game"]
+        self.items = ["Level 1", "Level 2", "Level 3", "Level 4", "EXTREME CHALLENGE", "Quit Game"]
         self.font = pygame.font.Font(None, 36)
         self.selected = 0  # Index of the selected item
 
