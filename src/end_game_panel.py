@@ -2,10 +2,13 @@ import pygame
 import sys
 
 class EndGamePanel:
-    def __init__(self, screen):
+    def __init__(self, screen, flag):
         self.screen = screen
         self.running = True
-        self.title = "Congratulations for completing the game"
+        if flag == 0:
+            self.title = "Congratulations for completing the game"
+        else:
+            self.title = "Congratulations for completing EXTREME CHALLENGE"
         self.title_font = pygame.font.SysFont(None, 48)
         self.items = ["Restart Level", "Main Menu"]
         self.font = pygame.font.SysFont(None, 36)
