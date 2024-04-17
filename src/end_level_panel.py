@@ -38,4 +38,5 @@ class EndLevelPanel:
                     elif event.key == pygame.K_RETURN:
                         self.running = False
                         return self.selected  # Return the selected option index
+            self.draw()
         return None

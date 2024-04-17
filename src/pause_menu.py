@@ -38,4 +38,5 @@ class PauseMenu:
                     elif event.key == pygame.K_RETURN:
                         self.running = False
                         return self.selected  # Return the index of the selected item
+            self.draw()
         return None
