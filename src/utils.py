@@ -71,7 +71,7 @@ def astar(maze, start, end, start_time, shortest_path_so_far=float('inf')):    #
             if node_position[0] > (len(maze) - 1) or node_position[0] < 0 or node_position[1] > (len(maze[len(maze)-1]) -1) or node_position[1] < 0:    # Make sure within range
                 continue
 
-            if maze[node_position[0]][node_position[1]] not in [0, 3, 4, 5, 6, 7]:  # Make sure walkable terrain
+            if maze[node_position[0]][node_position[1]] not in [0, 2, 3, 4, 5, 6, 7]:  # Make sure walkable terrain
                 continue
 
             new_node = Node(current_node, node_position)  # Create new node
@@ -90,7 +90,7 @@ def astar(maze, start, end, start_time, shortest_path_so_far=float('inf')):    #
 
             # Early break if the current path cost exceeds the shortest path found so far
             if child.f > shortest_path_so_far:
-                print("A* path cost exceeded shortest path found so far.")
+                #print("A* path cost exceeded shortest path found so far.")
                 continue  # Skip this child as it cannot possibly lead to a shorter path
 
             if len([open_node for open_node in open_list if child == open_node and child.g > open_node.g]) > 0: # Child is already in the open list and has a higher g value
@@ -136,8 +136,8 @@ def find_closest_collectible(maze, start, collectibles, start_time):    # Find t
                 closest_collectible = collectible
                 closest_path = path
                 shortest_distance = len(path)
-        else:
-            print("No path found to collectible", collectible)
+        #else:
+            #print("No path found to collectible", collectible)
 
     if closest_collectible is None:
         print("No closest collectible found. This could be due to maze configuration or collectibles' positioning.")
@@ -173,7 +173,7 @@ def dijkstra_path(maze, start, targets, start_time):    # Dijkstra algorithm to 
                 print("Dijkstra time limit exceeded, try A* instead.")
                 return None, []  # Return None for the target position and an empty list for the path if time limit is exceeded
             neighbor_pos = (current_node.position[0] + direction[0], current_node.position[1] + direction[1])
-            if 0 <= neighbor_pos[0] < len(maze) and 0 <= neighbor_pos[1] < len(maze[0]) and maze[neighbor_pos[0]][neighbor_pos[1]] in [0, 3, 4, 5, 6, 7] and neighbor_pos not in visited:   # Make sure within range and walkable terrain
+            if 0 <= neighbor_pos[0] < len(maze) and 0 <= neighbor_pos[1] < len(maze[0]) and maze[neighbor_pos[0]][neighbor_pos[1]] in [0, 2, 3, 4, 5, 6, 7] and neighbor_pos not in visited:   # Make sure within range and walkable terrain
                 neighbor_node = Node(current_node, neighbor_pos)
                 neighbor_g = current_g + 1
                 heapq.heappush(open_list, (neighbor_g, neighbor_node))
