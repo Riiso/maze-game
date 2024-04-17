@@ -8,8 +8,7 @@ class Level:
     def __init__(self, level_num, dev_mode):
         self.level_num = level_num  # Store the current level number
         self.dev_mode = dev_mode  # Store the developer mode setting
-        self.x = self.load_layouts()  # Load the layouts for the levels
-        self.layouts = self.load_layouts()
+        self.layouts = self.load_layouts()  # Load the layouts for the levels
         self.layout = self.layouts.get(level_num, self.layouts[1])
         self.player_start_pos = self.find_player_start()
         self.collectibles = []

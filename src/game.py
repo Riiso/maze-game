@@ -55,44 +55,32 @@ class Game:
             self.state = "RUNNING"
         elif selected_option == 1:  # Restart Level
             self.start_level(self.level.level_num)
-            #self.state = "RUNNING"
         elif selected_option == 2:  # Main Menu
             self.state = "MAIN_MENU"
-            #self.show_main_menu()
-        #pygame.display.flip()   # Update the display
 
     def show_game_over_panel(self):
         game_over_panel = GameOverPanel(self.screen)
         selected_option = game_over_panel.run()
         if selected_option == 0:  # Restart Level
             self.start_level(self.level.level_num)
-            self.state = "RUNNING"
         elif selected_option == 1:  # Main Menu
             self.state = "MAIN_MENU"
-            self.show_main_menu()
-        pygame.display.flip()   # Update the display
 
     def show_end_level_panel(self):
         end_level_panel = EndLevelPanel(self.screen)
         selected_option = end_level_panel.run()
         if selected_option == 0:  # Next Level
             self.start_level(self.level.level_num + 1)
-            self.state = "RUNNING"
         elif selected_option == 1:  # Main Menu
             self.state = "MAIN_MENU"
-            self.show_main_menu()
-        pygame.display.flip()   # Update the display
 
     def show_end_game_panel(self, flag):
         end_game_panel = EndGamePanel(self.screen, flag)
         selected_option = end_game_panel.run()
         if selected_option == 0:  # Restart Level
             self.start_level(self.level.level_num)
-            self.state = "RUNNING"
         elif selected_option == 1:  # Main Menu
             self.state = "MAIN_MENU"
-            self.show_main_menu()
-        pygame.display.flip()   # Update the display
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -262,7 +250,3 @@ class Game:
                     self.show_end_game_panel(0)
                 else:
                     self.show_end_game_panel(1)
-
-if __name__ == "__main__":
-    game = Game()
-    game.run()
