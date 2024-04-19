@@ -78,14 +78,18 @@ class Enemy:
                 else:
                     self.follow_path()
             else:
-                if not self.extreme_chase_mode and collected_ratio >= 0.3:
+                if not self.extreme_chase_mode and collected_ratio >= 0.15:
                     self.extreme_chase_mode = self.detect_player(player_pos)
-                if collected_ratio >= 0.3 and self.extreme_chase_mode and path_needs_update:
+                if collected_ratio >= 0.15 and self.extreme_chase_mode and path_needs_update:
                     self.last_known_player_pos = player_grid_pos
                     self.path = astar(level_layout, enemy_grid_pos, (player_grid_pos[1], player_grid_pos[0]), time.time())
                     if self.path and player_moved:
                         # If player is moving, immediately start following the new path
                         self.follow_path()
+                if collected_ratio >= 0.3:
+                    if random.random() < 0.1:   # 10% chance to change movement pattern
+                        self.movement_index = random.randint(0, len(self.movement_pattern) - 1)
+                
                 
                 if not self.path:   # If no path, follow the movement pattern
                     next_pos = self.movement_pattern[self.movement_index]
