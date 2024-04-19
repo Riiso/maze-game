@@ -90,7 +90,6 @@ def astar(maze, start, end, start_time, shortest_path_so_far=float('inf')):    #
 
             # Early break if the current path cost exceeds the shortest path found so far
             if child.f > shortest_path_so_far:
-                #print("A* path cost exceeded shortest path found so far.")
                 continue  # Skip this child as it cannot possibly lead to a shorter path
 
             if len([open_node for open_node in open_list if child == open_node and child.g > open_node.g]) > 0: # Child is already in the open list and has a higher g value
@@ -120,8 +119,14 @@ def astar_collectibles(maze, start, collectibles, end): # A* algorithm to find p
         final_path = astar(maze, current_position, end, start_time)
         if final_path:
             path += final_path[1:]  # Exclude the starting point of the final segment to avoid duplicate positions
+    
     elapsed_time = time.time() - start_time  # Calculate elapsed time
-    print(f"A* found path in {elapsed_time:.5f} seconds.")
+    
+    if elapsed_time > 5:    # If time limit is exceeded, print a message
+        print("A* found time limit 5s. exceeded. Returning partial path.")
+    else:
+        print(f"A* found path in {elapsed_time:.5f} seconds.")
+    
     return path
 
 def find_closest_collectible(maze, start, collectibles, start_time):    # Find the closest collectible to the start position
@@ -136,8 +141,6 @@ def find_closest_collectible(maze, start, collectibles, start_time):    # Find t
                 closest_collectible = collectible
                 closest_path = path
                 shortest_distance = len(path)
-        #else:
-            #print("No path found to collectible", collectible)
 
     if closest_collectible is None:
         print("No closest collectible found. This could be due to maze configuration or collectibles' positioning.")
@@ -195,6 +198,12 @@ def dijkstra(maze, start, collectibles, end):   # Dijkstra algorithm to find pat
         else:
             print("Could not find path to any remaining target.")
             break
+    
     elapsed_time = time.time() - start_time  # Calculate elapsed time
-    print(f"Dijkstra found path in {elapsed_time:.5f} seconds.")
+    
+    if elapsed_time > 5:    # If time limit is exceeded, print a message
+        print("Dijkstra found time limit 5s. exceeded. Returning partial path.")
+    else:
+        print(f"Dijkstra found path in {elapsed_time:.5f} seconds.")
+    
     return path
