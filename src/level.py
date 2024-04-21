@@ -1,5 +1,6 @@
 import pygame
 import os
+import sys
 import ast
 from collectible import Collectible
 from enemy import GateDefender, CornerDefender, HallwayDefender
@@ -25,8 +26,12 @@ class Level:
         current_level = None
         layout = []
         base_path = os.path.dirname(__file__)  # Get the directory where the script is located
-        file_path = os.path.join(base_path, '..', 'levels', 'levels_layouts.txt')  # Path to the layouts file
-
+        
+        if getattr(sys, 'frozen', False):   # The application is running in a bundled form (as an .exe or another bundled application)
+            file_path = os.path.join(base_path, 'levels_layouts.txt')  # Path to the layouts file
+        else:   # The application is running in a normal Python environment (IDE, command line, etc.)
+            file_path = os.path.join(base_path, '..', 'levels', 'levels_layouts.txt')
+        
         with open(file_path, 'r') as file:
             for line in file:
                 line = line.strip()
